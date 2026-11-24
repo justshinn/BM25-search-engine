@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -8,7 +7,9 @@ function Detail() {
   const navigate = useNavigate();
 
   const [article, setArticle] = useState(null);
+  const [score, setScore] = useState(null);
   const [searchData, setSearchData] = useState(null);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const savedArticle = sessionStorage.getItem("selectedArticle");
@@ -19,13 +20,54 @@ function Detail() {
       return;
     }
 
-    setArticle(JSON.parse(savedArticle));
+    const selected = JSON.parse(savedArticle);
     setSearchData(JSON.parse(savedSearch));
+    setScore(selected.score);
+
+    const controller = new AbortController();
+
+    fetch(`/api/article/${selected.doc_id}`, { signal: controller.signal })
+      .then((res) => {
+        if (!res.ok) throw new Error("Artikel tidak ditemukan.");
+        return res.json();
+      })
+      .then(setArticle)
+      .catch((err) => {
+        if (err.name === "AbortError") return;
+        setError(
+          err.message === "Failed to fetch"
+            ? "Gagal terhubung ke server. Pastikan backend sudah berjalan."
+            : err.message
+        );
+      });
+
+    return () => controller.abort();
   }, [navigate]);
+
+  if (error) {
+    return (
+      <div className="detail-page">
+        <div className="detail-container">
+          <button
+            className="back-button"
+            onClick={() => navigate("/results")}
+          >
+            ← Kembali ke Hasil
+          </button>
+          <p>{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!article || !searchData) {
     return <div className="loading">Memuat artikel...</div>;
   }
+
+  const paragraphs = article.text
+    .split(/\n+/)
+    .map((p) => p.trim())
+    .filter(Boolean);
 
   return (
     <div className="detail-page">
@@ -40,35 +82,39 @@ function Detail() {
         </button>
 
         <div className="detail-meta">
-          <span>{article.source}</span>
+          <span>{article.media}</span>
           <span>{article.date}</span>
-          <span>{article.country}</span>
+          <span>{article.negara.join(", ")}</span>
         </div>
 
         <h1>{article.title}</h1>
 
         <div className="detail-score">
-          Relevance Score: {article.score.toFixed(3)}
+          Relevance Score: {score.toFixed(3)}
         </div>
 
         <div className="detail-content">
-          <p>{article.content}</p>
+          {paragraphs.map((p, i) => (
+            <p key={i}>{p}</p>
+          ))}
         </div>
+
+        {article.url && (
+          <p>
+            <a href={article.url} target="_blank" rel="noreferrer">
+              Baca di sumber asli →
+            </a>
+          </p>
+        )}
 
         <div className="search-metadata">
           <h3>Informasi Pencarian</h3>
 
-          <p>
-            Kata kunci: {searchData.query}
-          </p>
+          <p>Kata kunci: {searchData.query}</p>
 
-          <p>
-            Metode: {searchData.method}
-          </p>
+          <p>Metode: {searchData.method}</p>
 
-          <p>
-            Filter negara: {searchData.country}
-          </p>
+          <p>Filter negara: {searchData.country}</p>
         </div>
 
       </div>

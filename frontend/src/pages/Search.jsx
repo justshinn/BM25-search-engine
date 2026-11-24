@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/Search.css";
@@ -21,7 +20,7 @@ function Search() {
     "India",
     "Thailand",
     "Taiwan",
-    "Prancis"
+    "Prancis",
   ];
 
   function handleSearch(e) {
@@ -35,7 +34,7 @@ function Search() {
     const searchData = {
       query: query.trim(),
       method,
-      country
+      country,
     };
 
     sessionStorage.setItem("searchData", JSON.stringify(searchData));
@@ -46,7 +45,6 @@ function Search() {
   return (
     <div className="search-page">
       <div className="search-container">
-
         <h1>Badminton News Search Engine</h1>
 
         <p className="search-subtitle">
@@ -54,7 +52,6 @@ function Search() {
         </p>
 
         <form onSubmit={handleSearch}>
-
           <input
             type="text"
             className="search-input"
@@ -64,7 +61,6 @@ function Search() {
           />
 
           <div className="search-options">
-
             <div className="option-group">
               <label>Metode Pencarian</label>
 
@@ -73,7 +69,7 @@ function Search() {
                 onChange={(e) => setMethod(e.target.value)}
               >
                 <option value="BM25">BM25</option>
-                <option value="BM25+">BM25+</option>
+                <option value="BM25+QE">BM25 + Query Expansion</option>
               </select>
             </div>
 
@@ -91,13 +87,11 @@ function Search() {
                 ))}
               </select>
             </div>
-
           </div>
 
           <button type="submit" className="search-button">
             Cari Berita
           </button>
-
         </form>
       </div>
     </div>
